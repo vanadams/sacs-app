@@ -4,8 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Beneficiary;
 use Illuminate\Http\Request;
-// use App\Model\Beneficiary;
-// use App\Http\Requests\BeneficiaryRequest;
+use Validator;
 
 class BeneficiaryController extends Controller
 {
@@ -14,7 +13,7 @@ class BeneficiaryController extends Controller
      */
     public function index()
     {
-        $beneficiaries = Beneficiary::all();
+        $beneficiaries = Beneficiary::latest()->paginate(15);
 
         return view('beneficiaries.index', compact('beneficiaries'));
     }
@@ -32,8 +31,19 @@ class BeneficiaryController extends Controller
      */
     public function store(Request $request)
     {
+
+        $beneficiaryData = $request->all();
+        $familyMembersData = json_decode($request->input('family_members'), true);
+
+        if (!is_array($familyMembersData)) {
+            return redirect()->back()->withErrors(['family_members' => 'Invalid family members data.'])->withInput();
+        }
+
         $validated = $request->validate([
-            'pangalan' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'extension_name' => 'nullable|string|max:255',
             'kasarian' => 'required|string|in:lalaki,babae',
             'tirahan' => 'required|string|max:255',
             'kalye' => 'nullable|string|max:255',
@@ -58,7 +68,29 @@ class BeneficiaryController extends Controller
             'uri_ng_others' => 'nullable|string|max:255'
         ]);
 
+        $familyMemberRules = [
+            'last_name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'extension_name' => 'nullable|string|max:10',
+            'relasyon_sa_benepisyaryo' => 'required|string|max:255',
+            'petsa_ng_kapanganakan' => 'required|date',
+            'kasarian' => 'required|string|in:lalaki,babae',
+            'trabaho' => 'nullable|string|max:255',
+            'sektor' => 'nullable|string',
+            'kondisyon_ng_kalusugan' => 'nullable|string'
+        ];
+
+
+        foreach ($familyMembersData as $familyMember) {
+            $validator = Validator::make($familyMember, $familyMemberRules);
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+        }
+
         $beneficiary = Beneficiary::create($validated);
+        $beneficiary->beneficiaryFamilyMembers()->createMany($familyMembersData);
 
         return redirect()->route('beneficiaries.index')->with('success', 'Record created successfully.');
     }
@@ -68,7 +100,7 @@ class BeneficiaryController extends Controller
      */
     public function show(Beneficiary $beneficiary)
     {
-        dd($beneficiary);
+        // dd($beneficiary);
 
         return view('beneficiaries.show', compact('beneficiary'));
     }
@@ -88,7 +120,10 @@ class BeneficiaryController extends Controller
     public function update(Request $request, Beneficiary $beneficiary)
     {
         $validated = $request->validate([
-            'pangalan' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'extension_name' => 'nullable|string|max:255',
             'kasarian' => 'required|string|in:lalaki,babae',
             'tirahan' => 'required|string|max:255',
             'kalye' => 'nullable|string|max:255',
@@ -123,6 +158,7 @@ class BeneficiaryController extends Controller
      */
     public function destroy(Beneficiary $beneficiary)
     {
+        $beneficiary->beneficiaryFamilyMembers()->delete();
         $beneficiary->delete();
         return redirect()->route('beneficiaries.index')->with('success', 'Successfully deleted');;
     }
