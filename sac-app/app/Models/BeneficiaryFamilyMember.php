@@ -12,7 +12,10 @@ class BeneficiaryFamilyMember extends Model
 
     protected $fillable = [
         'beneficiary_id',
-        'pangalan',
+        'last_name',
+        'first_name',
+        'middle_name',
+        'extension_name',
         'relasyon_sa_benepisyaryo',
         'petsa_ng_kapanganakan',
         'kasarian',
