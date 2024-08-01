@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('beneficiary_family_members', function (Blueprint $table) {
             $table->id();$table->unsignedBigInteger('beneficiary_id');
-            $table->string('pangalan');
+            $table->string('last_name');
+            $table->string('first_name');
+            $table->string('middle_name')->nullable();
+            $table->string('extension_name')->nullable();
             $table->string('relasyon_sa_benepisyaryo');
             $table->date('petsa_ng_kapanganakan')->nullable();
             $table->string('kasarian');
