@@ -13,7 +13,10 @@ class Beneficiary extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'pangalan',
+        'last_name',
+        'first_name',
+        'middle_name',
+        'extension_name',
         'kasarian',
         'tirahan',
         'kalye',
